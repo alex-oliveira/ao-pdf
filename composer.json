@@ -1,0 +1,24 @@
+{
+  "license": "MIT",
+  "type": "package",
+  "name": "alex-oliveira/ao-pdf",
+  "homepage": "https://github.com/alex-oliveira/ao-pdf",
+  "description": "Resources for filling PDF Templates with Laravel.",
+  "keywords": ["alex-oliveira", "laravel", "pdf"],
+  "authors": [
+    {
+      "name": "Alex Oliveira",
+      "homepage": "https://github.com/alex-oliveira",
+      "role": "Developer"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "AOPDF\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=5.5.9",
+    "laravel/framework": "5.*"
+  }
+}
