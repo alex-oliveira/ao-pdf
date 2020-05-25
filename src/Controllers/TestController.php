@@ -35,10 +35,10 @@ class TestController extends Controller
 
         $data = [];
 
-        $data[] = [
-            'template' => 'https://github.com/alex-oliveira/ao-pdf/raw/master/example.pdf',
-            'params' => $client
-        ];
+//        $data[] = [
+//            'template' => 'https://github.com/alex-oliveira/ao-pdf/raw/master/example.pdf',
+//            'params' => $client
+//        ];
 
         $data[] = [
             'template' => 'https://github.com/alex-oliveira/ao-pdf/raw/master/example.pdf',
