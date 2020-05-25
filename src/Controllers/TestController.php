@@ -18,7 +18,7 @@ class TestController extends Controller
             'client_age' => 100,
             'client_weight' => 100.00,
             'client_salary' => 10000.00,
-            'client_created_at' => time(),
+            'client_created_at' => 1590445141,
             'client_skills' => [
                 'PHP', 'JS'
             ],
@@ -35,10 +35,10 @@ class TestController extends Controller
 
         $data = [];
 
-//        $data[] = [
-//            'template' => 'https://github.com/alex-oliveira/ao-pdf/raw/master/example.pdf',
-//            'params' => $client
-//        ];
+        $data[] = [
+            'template' => 'https://github.com/alex-oliveira/ao-pdf/raw/master/example.pdf',
+            'params' => $client
+        ];
 
         $data[] = [
             'template' => 'https://github.com/alex-oliveira/ao-pdf/raw/master/example.pdf',
@@ -48,9 +48,9 @@ class TestController extends Controller
                 'upper' => ['client_name', 'client_address.city'],
                 'unaccented' => ['client_address.city'],
                 'decimal' => ['client_weight'],
-                'money' => ['client_salary'],
-                'dateTimestamp' => ['client_birth_at'],
-                'postcode' => ['client_address.cep'],
+                'rbl' => ['client_salary'],
+                'date' => ['client_birth_at'],
+                'cep' => ['client_address.cep'],
                 'cpf' => ['client_cpf'],
                 'cnpj' => ['client_cnpj'],
                 'percent' => ['client_tax'],

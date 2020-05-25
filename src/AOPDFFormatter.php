@@ -107,16 +107,46 @@ class AOPDFFormatter
         return self::decimal($value) . '%';
     }
 
+    public static function kg($value)
+    {
+        return self::decimal($value) . 'Kg';
+    }
+
+    public static function kmh($value)
+    {
+        return self::decimal($value) . 'Km/h';
+    }
+
+    public static function rpm($value)
+    {
+        return self::decimal($value) . 'rp/m';
+    }
+
+    public static function m2($value)
+    {
+        return self::decimal($value) . 'm²';
+    }
+
+    public static function ml($value)
+    {
+        return self::decimal($value) . 'ml';
+    }
+
     //
     // MONEY
     //
 
-    public static function USD($value)
+    public static function money($value)
+    {
+        return self::rbl($value);
+    }
+
+    public static function usd($value)
     {
         return 'U$ ' . self::decimal($value);
     }
 
-    public static function RBL($value)
+    public static function rbl($value)
     {
         return 'R$ ' . self::decimal($value);
     }
@@ -128,7 +158,7 @@ class AOPDFFormatter
     public static function cep($value)
     {
         return strlen($value) <= 8
-            ? AOPDFHelper::mask(str_pad($value, 8, 0, STR_PAD_LEFT), '##.###-###')
+            ? AOPDF::mask(str_pad($value, 8, 0, STR_PAD_LEFT), '##.###-###')
             : $value;
     }
 
@@ -139,14 +169,14 @@ class AOPDFFormatter
     public static function cpf($value)
     {
         return strlen($value) == 11
-            ? AOPDFHelper::mask($value, '###.###.###-##')
+            ? AOPDF::mask($value, '###.###.###-##')
             : $value;
     }
 
     public static function cnpj($value)
     {
         return strlen($value) == 14
-            ? AOPDFHelper::mask($value, '##.###.###/####-##')
+            ? AOPDF::mask($value, '##.###.###/####-##')
             : $value;
     }
 
@@ -157,24 +187,95 @@ class AOPDFFormatter
     public static function phone($value)
     {
         if (strlen($value) == 12)
-            return AOPDFHelper::mask($value, '(##) ##-####-####');
+            return AOPDF::mask($value, '(##) ##-####-####');
 
         if (strlen($value) == 11)
-            return AOPDFHelper::mask($value, '(##) #-####-####');
+            return AOPDF::mask($value, '(##) #-####-####');
 
         if (strlen($value) == 10)
-            return AOPDFHelper::mask($value, '(##) ####-####');
+            return AOPDF::mask($value, '(##) ####-####');
 
         if (strlen($value) == 9)
-            return AOPDFHelper::mask($value, '#-####-####');
+            return AOPDF::mask($value, '#-####-####');
 
         if (strlen($value) == 8)
-            return AOPDFHelper::mask($value, '####-####');
+            return AOPDF::mask($value, '####-####');
 
         if (strlen($value) == 7)
-            return AOPDFHelper::mask($value, '###-####');
+            return AOPDF::mask($value, '###-####');
 
         return $value;
+    }
+
+    //
+    // DATE
+    //
+
+    public static function date($value)
+    {
+        return is_numeric($value) ? self::dateByTimestamp($value) : self::dateByString($value);
+    }
+
+    public static function datetime($value)
+    {
+        return is_numeric($value) ? self::datetimeByTimestamp($value) : self::datetimeByString($value);
+    }
+
+    public static function time($value)
+    {
+        return is_numeric($value) ? self::timeByTimestamp($value) : self::timeByString($value);
+    }
+
+    public static function dateByString($value)
+    {
+        try {
+            return (new \DateTime($value))->format('d/m/Y');
+        } catch (\Exception $e) {
+            return $value;
+        }
+    }
+
+    public static function datetimeByString($value)
+    {
+        try {
+            return (new \DateTime($value))->format('d/m/Y H:i:s');
+        } catch (\Exception $e) {
+            return $value;
+        }
+    }
+
+    public static function timeByString($value)
+    {
+        try {
+            return (new \DateTime($value))->format('H:i:s');
+        } catch (\Exception $e) {
+            return $value;
+        }
+    }
+
+    public static function dateByTimestamp($value)
+    {
+        return date('d/m/Y', $value);
+    }
+
+    public static function datetimeByTimestamp($value)
+    {
+        return date('d/m/Y H:i:s', $value);
+    }
+
+    public static function timeByTimestamp($value)
+    {
+        return date('H:i:s', $value);
+    }
+
+    public static function dateByNow($value)
+    {
+        return date('d/m/Y');
+    }
+
+    public static function datetimeByNow($value)
+    {
+        return date('d/m/Y H:i:s');
     }
 
 }

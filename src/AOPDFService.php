@@ -4,19 +4,10 @@ namespace AOPDF;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AOPDFService
 {
-
-    protected $config = [
-        'template' => '', // nome do tamplete que será utilizado
-        'all' => [],
-        'fields' => [],
-    ];
-
-    //------------------------------------------------------------------------------------------------------------------
-    // MAIN FUNCTIONS
-    //------------------------------------------------------------------------------------------------------------------
 
     /**
      * @param array $items
@@ -26,33 +17,31 @@ class AOPDFService
      */
     public function process(array $items)
     {
-        if (!key_exists(0, $items)) {
+        if (key_exists(0, $items) == false) {
             $items = [$items];
         }
 
-        $pdf_paths = [];
+        $pdf_locations = [];
 
         foreach ($items as $item) {
-            $pdf_paths[] = $this->makePDF($item);
+            $pdf_locations[] = $this->makePDF($item);
         }
 
-        if (count($pdf_paths) > 1) {
-            $pdf_path = $this->makeMerge($pdf_paths);
-        } else {
-            $pdf_path = Arr::first($pdf_paths);
-        }
+        $pdf_location = $this->mergePDF($pdf_locations);
 
-        if (empty($pdf_path)) {
+        if (empty($pdf_location)) {
             abort(400, 'No files were generated.');
         }
 
-        //$pdf_path = $this->makeZIP($pdf_path);
+        //$pdf_location = $this->makeZIP($pdf_location);
 
-        return $pdf_path;
+        return $pdf_location;
     }
 
     public function makePDF($data)
     {
+        $disk = AOPDF::disk();
+
         $template = Arr::get($data, 'template');
         $config = Arr::get($data, 'config', []);
         $params = Arr::get($data, 'params', []);
@@ -60,70 +49,81 @@ class AOPDFService
         //
         // DEFINE TEMPLATE
         //
-        $template_hash = md5($template);
-        $template_name = basename($template);
-        $template_path = storage_path('app/templates/' . $template_hash);
-        if (Storage::exists('templates/' . $template_hash) == false) {
-            $template_content = file_get_contents($template);
-            Storage::put('templates/' . $template_hash, $template_content);
+        $template_name = md5($template) . '.pdf';
+        $template_location = 'templates/' . $template_name;
+        if ($disk->exists($template_location) == false) {
+            $disk->put($template_location, file_get_contents($template));
         }
 
         //
         // FORMAT PARAMS
         //
+        $name = AOPDF::uniqid();
         $params = $this->formatParams($params, $config);
 
         //
         // MAKE FDF
         //
-        $fdf_name = time() . '_' . uniqid() . '.fdf';
-        $fdf_content = $this->makeFDF($fdf_name, $params);
-        $fdf_path = storage_path('app/tmp/' . $fdf_name);
-        Storage::put('tmp/' . $fdf_name, $fdf_content);
+        $fdf_location = 'tmp/' . $name . '.fdf';
+        $disk->put($fdf_location, $this->makeFDF($params));
 
         //
         // MAKE PDF
         //
-        $pdf_name = time() . '_' . uniqid() . '_' . $template_name;
-        $pdf_path = storage_path('app/tmp/' . $pdf_name);
-        $pdf_output = [];
-        $pdf_command = "pdftkx \"$template_path\" fill_form \"$fdf_path\" output \"$pdf_path\" flatten";
-        exec($pdf_command, $pdf_output);
+        $pdf_location = 'tmp/' . $name . '.pdf';
+        $pdf_output = AOPDF::exec([
+            'pdftk', $disk->path($template_location),
+            'fill_form', $disk->path($fdf_location),
+            'output', $disk->path($pdf_location),
+            'flatten',
+        ]);
 
-        //$pdf_command = "pdftk /home/vagrant/www/teste/my.template.pdf fill_form /home/vagrant/www/teste/my.fdf output /home/vagrant/www/teste/my.pdf flatten";
-        //dd($pdf_command, $pdf_output);
+        $disk->delete($fdf_location);
 
-        unlink($fdf_path);
+        if (count($pdf_output) > 0) {
+            abort(412, 'Failed to generate PDF. ' . json_encode($pdf_output));
+        }
 
-        if (!Storage::exists('tmp/' . $pdf_name)) {
+        if ($disk->exists($pdf_location) == false) {
             abort(412, 'PDF file was not created.');
         }
 
-        return $pdf_path;
+        return $pdf_location;
     }
-
-    //------------------------------------------------------------------------------------------------------------------
-    // OTHER FUNCTIONS
-    //------------------------------------------------------------------------------------------------------------------
 
     protected function formatParams(array $params, array $config)
     {
-        // todo: resolve SELECT
+        //
+        // RESOLVE SELECT
+        //
+        $selects = Arr::get($config, 'select', []);
+        foreach ($selects as $select) {
+            $values = Arr::get($params, $select, []);
 
+            if (is_string($values)) {
+                $values = [$values];
+            } else if (!is_array($values)) {
+                continue;
+            }
+
+            $data = [];
+
+            foreach ($values as $value) {
+                $data[Str::slug($value)] = 'X';
+            }
+
+            Arr::set($params, $select, $data);
+        }
+
+        //
+        // TO DOT
+        //
         $params = Arr::dot($params);
-
         foreach ($params as $field => $value) {
             if (is_array($value) || is_object($value)) {
                 unset($params[$field]);
                 continue;
             }
-
-//            if (in_array($key, $config['select'])) {
-//                $params[$key . ':' . $value] = 'X';
-//                unset($params[$key]);
-//                continue;
-//            }
-
             $params[$field] = is_null($value) ? '' : $value;
         }
 
@@ -181,12 +181,12 @@ class AOPDFService
         return $params;
     }
 
-    protected function makeFDF($name, $params)
+    protected function makeFDF($params, $name = 'params.fdf')
     {
         $fdf = "%FDF-1.2\n%âãÏÓ\n1 0 obj\n<< \n/FDF << /Fields [ ";
 
         foreach ($params as $key => $value) {
-            $fdf .= "<</T($key)/V(" . AOPDFHelper::fixFDFvalue(mb_convert_encoding($value, 'UTF-8')) . ")>>";
+            $fdf .= "<</T($key)/V(" . AOPDF::fixFDFvalue(mb_convert_encoding($value, 'UTF-8')) . ")>>";
         }
 
         $fdf .= "] \n/F (" . $name . ") /ID [ <" . md5(time()) . ">\n] >>";
@@ -196,53 +196,56 @@ class AOPDFService
         return $fdf;
     }
 
-    protected function mergePDF(array $files, $merge_name = null)
+    protected function mergePDF(array $pdf_locations)
     {
-        if (is_null($merge_name))
-            $merge_name = 'KIT-' . date('Y-m-d-H-i-s') . '-' . uniqid() . '.pdf';
-
-        $merge_path = storage_path() . '/temp/' . $merge_name;
-
-        if (count($files) <= 0)
-            return false;
-
-        exec('pdftk "' . implode('" "', $files) . '" output "' . $merge_path . '"');
-
-        foreach ($files as $file) {
-            if (is_string($file) && file_exists($file))
-                unlink($file);
+        if (count($pdf_locations) <= 1) {
+            return Arr::first($pdf_locations);
         }
 
-        return $merge_path;
+        $disk = AOPDF::disk();
+
+        $merge_name = AOPDF::uniqid('.pdf');
+        $merge_location = 'tmp/' . $merge_name;
+
+        $parts = ['pdftk'];
+        foreach ($pdf_locations as $pdf_location) {
+            $parts[] = '"' . $disk->path($pdf_location) . '"';
+        }
+        $parts[] = 'output';
+        $parts[] = '"' . $disk->path($merge_location) . '"';
+
+        $output = AOPDF::exec($parts);
+
+        if (count($output) > 0) {
+            abort(412, 'Failed to merge PDF. ' . json_encode($output));
+        }
+
+        foreach ($pdf_locations as $pdf_location) {
+            if ($disk->exists($pdf_location)) {
+                $disk->delete($pdf_location);
+            }
+        }
+
+        return $merge_location;
     }
 
-    protected function makeZIP(array $files, $zip_name = null)
+    protected function makeZIP($pdf_location)
     {
-        if (count($files) <= 0)
-            return false;
+        $disk = AOPDF::disk();
 
-        if (is_null($zip_name))
-            $zip_name = 'KIT-' . date('Y-m-d-H-i-s') . '-' . uniqid() . '.zip';
-
-        $zip_path = storage_path() . '/temp/' . $zip_name;
+        $zip_name = AOPDF::uniqid('.zip');
+        $zip_location = 'tmp/' . $zip_name;
 
         $zip = new \ZipArchive();
-        if ($zip->open($zip_path, \ZIPARCHIVE::CREATE) !== true)
+        if ($zip->open($disk->path($zip_location), \ZIPARCHIVE::CREATE) !== true)
             return false;
 
-        foreach ($files as $file) {
-            if (is_string($file) && file_exists($file))
-                $zip->addFile($file, basename($file));
-        }
-
+        $zip->addFile($disk->path($pdf_location), basename($pdf_location));
         $zip->close();
 
-        foreach ($files as $file) {
-            if (is_string($file) && file_exists($file))
-                unlink($file);
-        }
+        $disk->delete($pdf_location);
 
-        return $zip_path;
+        return $zip_location;
     }
 
 }
