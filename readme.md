@@ -8,9 +8,13 @@ If you want to use the standard container service, use ao-pdf-docker: https://gi
 ## Prerequisites
 
 ### Install "pdftk"
+
+UBUNTU
 ````
 $ sudo snap install pdftk
+$ sudo ln -s /snap/bin/pdftk /bin/pdftk
 ````
+
 https://linuxhint.com/install_pdftk_ubuntu/
 
 https://askubuntu.com/questions/1028522/how-can-i-install-pdftk-in-ubuntu-18-04-and-later
