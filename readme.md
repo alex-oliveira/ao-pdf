@@ -5,7 +5,7 @@ If you want to use the standard container service, use ao-pdf-docker: https://gi
 
 
 
-## Prerequisites
+## PREREQUISITES
 
 ### Install "pdftk"
 
@@ -21,7 +21,7 @@ https://askubuntu.com/questions/1028522/how-can-i-install-pdftk-in-ubuntu-18-04-
 
 
 
-## Installation
+## INSTALLATION
 
 ### 1) Install
 ````
@@ -40,7 +40,7 @@ $ composer require alex-oliveira/ao-pdf
 
 
 
-## Route
+## ROUTE
 
 O ServiceProvider do pacote disponibiliza quatro rotas para utilização dos recursos:
 
@@ -62,7 +62,7 @@ O ServiceProvider do pacote disponibiliza quatro rotas para utilização dos rec
 
 
 
-## Utilization
+## UTILIZATION
 
 ### Basic
 ````
@@ -103,6 +103,8 @@ $content = json_decode($response->getBody()->getContents());
 
 redirect()->to('{{__MY_API__}}/pdf/download?file=' . $content->file_name);
 ````
+
+PASSO A PASSO
 
 1) Determinando a composição do documento.
 
