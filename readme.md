@@ -87,13 +87,13 @@ $data = AOPDF::encode([
 
 GET ( para requisições com **poucos dados** )
 ````
-redirect()->to('{{__MY_API__}}/pdf/fill?data=' . $data);
+redirect()->to('http://{{__MY_HOST__}}/pdf/fill?data=' . $data);
 ````
 
 POST (para requisições com **muito dados** )
 ````
 $client = new GuzzleHttp\Client();
-$response = $client->request('POST', '{{__MY_API__}}/pdf/fill', [
+$response = $client->request('POST', 'http://{{__MY_HOST__}}/pdf/fill', [
     'form_params' => [
         'data' => $data
     ]
@@ -101,7 +101,7 @@ $response = $client->request('POST', '{{__MY_API__}}/pdf/fill', [
 
 $content = json_decode($response->getBody()->getContents());
 
-redirect()->to('{{__MY_API__}}/pdf/download?file=' . $content->file_name);
+redirect()->to('http://{{__MY_HOST__}}/pdf/download?file=' . $content->file_name);
 ````
 
 PASSO A PASSO
@@ -152,7 +152,7 @@ PASSO A PASSO
     * Utilize a função **AOPDF::encode($data)** para codificar corretamente os dados.
       
     * Uma vez com os dados codificados, você pode enviá-los para a
-      rota **http://{{__MY_API__}}/pdf/fill**, por requisição **GET** ou **POST**.
+      rota **http://{{__MY_HOST__}}/pdf/fill**, por requisição **GET** ou **POST**.
       
     * Utilize **GET** para documentos que utilizam poucos dados e **POST** para
       documentos com muitos dados.
@@ -178,7 +178,7 @@ PASSO A PASSO
       não será um arquivo PDF e sim um **nome de um arquivo temporário no servidor**.
       
     * Para obter o arquivo PDF será necessário fazer uma nova requisição, do tipo **GET**,
-      para a rota **http://{{__MY_API__}}/pdf/download**, informando o **nome do arquivo temporário**
+      para a rota **http://{{__MY_HOST__}}/pdf/download**, informando o **nome do arquivo temporário**
       em um campo chamado **file**, na queryString.
       
     * Fazendo isso o arquivo será processado e o download será iniciado.
