@@ -90,7 +90,7 @@ GET ( para requisições com **poucos dados** )
 redirect()->to('http://{{__MY_HOST__}}/pdf/fill?data=' . $data);
 ````
 
-POST (para requisições com **muito dados** )
+POST (para requisições com **muitos dados** )
 ````
 $client = new GuzzleHttp\Client();
 $response = $client->request('POST', 'http://{{__MY_HOST__}}/pdf/fill', [
