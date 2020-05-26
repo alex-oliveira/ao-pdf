@@ -1,4 +1,4 @@
-# AOPDF
+# AO-PDF
 
 This package is for those who want to create their own customized pdf service.
 If you want to use the standard container service, use ao-pdf-docker: https://github.com/alex-oliveira/ao-pdf-docker
@@ -40,7 +40,7 @@ $ composer require alex-oliveira/ao-pdf
 
 
 
-## ROUTE
+## ROUTES
 
 O ServiceProvider do pacote disponibiliza quatro rotas para utilização dos recursos:
 
