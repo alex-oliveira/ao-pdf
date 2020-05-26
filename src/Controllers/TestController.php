@@ -2,6 +2,7 @@
 
 namespace AOPDF\Controllers;
 
+use AOPDF\AOPDF;
 use App\Http\Controllers\Controller;
 
 class TestController extends Controller
@@ -61,8 +62,7 @@ class TestController extends Controller
             'params' => $client
         ];
 
-        $data = json_encode($data);
-        $data = base64_encode($data);
+        $data = AOPDF::encode($data);
 
         return redirect()->route('pdf.fill-by-get', ['data' => $data]);
     }
