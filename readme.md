@@ -1,7 +1,8 @@
 # AO-PDF
 
 This package is for those who want to create their own customized pdf service.
-If you want to use the standard container service, use ao-pdf-docker: https://github.com/alex-oliveira/ao-pdf-docker
+
+If you just want to use the standard container service, you can find the official image at https://hub.docker.com/r/aocode/ao-pdf
 
 
 
